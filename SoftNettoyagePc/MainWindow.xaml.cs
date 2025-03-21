@@ -41,13 +41,13 @@ namespace SoftNettoyagePc
         /**
          * Fonction de nettoyage du dossier
          * */
-        public void CleanDirectory(DirectoryInfo dir)
+        public void CleanTempDirectory(DirectoryInfo dir)
         {
             foreach (FileInfo file in dir.GetFiles())
             {
                 try
                 {
-                file.Delete();
+                    file.Delete();
                     totalRemovedFiles++;
                 } catch(Exception ex) {
                     continue; 
@@ -58,7 +58,7 @@ namespace SoftNettoyagePc
             {
                 try
                 {
-                subdir.Delete(true);
+                    subdir.Delete(true);
                     totalRemovedFiles++;
                 }
                 catch (Exception ex)
@@ -68,14 +68,51 @@ namespace SoftNettoyagePc
             }
         }
 
+        /**
+         * Fonction d'analyse du nombre de fichiers à supprimer et indique à l'utilisateur l'espace à gagner
+         * */
+        public void AnalyzeFolders()
+        {
+            long totalSize = 0;
+            try
+            {
+                totalSize += GetDirectorySize(winTemp) / 1000000;
+                totalSize += GetDirectorySize(appTemp) / 1000000;
+            } catch(Exception ex)
+            {
+                MessageBox.Show("Erreur lors de l'analyse des dossiers : " + ex.Message, "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+
+            if (totalSize > 0)
+            {
+                hCleanSpace.Content = totalSize + " Mo";
+                hCleanDate.Content = DateTime.Now.ToString("dd/MM/yyyy");
+            }
+            else
+            {
+                MessageBox.Show("Aucun fichier temporaire à supprimer", "Analyse terminée", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+        }
+
         private void AnalyzeBtn_Click(object sender, RoutedEventArgs e)
         {
-
+            AnalyzeFolders();
+            homeTitle.Content = "Analyse terminée";
         }
 
         private void CleanBtn_Click(object sender, RoutedEventArgs e)
         {
+            cleanBtn.Content = "Nettoyage en cours...";
 
+            Clipboard.Clear();
+            CleanTempDirectory(winTemp);
+            CleanTempDirectory(appTemp);
+
+            MessageBox.Show("Nettoyage terminé, " + totalRemovedFiles + " fichiers supprimés", "Nettoyage terminé", MessageBoxButton.OK, MessageBoxImage.Information);
+
+            homeTitle.Content = "Nettoyage terminé";
+            hCleanSpace.Content = "0 Mo";
+            cleanBtn.Content = "NETTOYER";
         }
 
         private void HistoryBtn_Click(object sender, RoutedEventArgs e)
